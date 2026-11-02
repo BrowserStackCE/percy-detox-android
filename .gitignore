@@ -1,0 +1,21 @@
+node_modules/
+.DS_Store
+*.log
+
+# Detox / Percy
+artifacts/
+example/artifacts/
+.percy-*/
+
+# Android
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+.idea/
+*.iml
+
+# Env
+.env
+.env.*

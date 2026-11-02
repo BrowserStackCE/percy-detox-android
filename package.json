@@ -1,0 +1,38 @@
+{
+  "name": "percy-detox",
+  "version": "0.1.0",
+  "description": "App Percy visual testing for Detox tests running on BrowserStack App Automate (android.cloud) and local devices",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib/"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "percy",
+    "app-percy",
+    "detox",
+    "browserstack",
+    "visual-testing",
+    "react-native"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@percy/sdk-utils": "^1.32.12"
+  },
+  "peerDependencies": {
+    "detox": ">=20"
+  },
+  "peerDependenciesMeta": {
+    "detox": {
+      "optional": true
+    }
+  }
+}

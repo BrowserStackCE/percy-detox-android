@@ -1,0 +1,10 @@
+pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+plugins { id("com.facebook.react.settings") }
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+rootProject.name = 'PercyDetoxExample'
+include ':app'
+
+// Detox (BrowserStack fork) ships its Android lib as source
+include ':detox'
+project(':detox').projectDir = new File(rootProject.projectDir, '../node_modules/detox/android/detox')
+includeBuild('../node_modules/@react-native/gradle-plugin')
