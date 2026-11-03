@@ -3,12 +3,16 @@
   "private": true,
   "scripts": {
     "start": "react-native start",
+    "postinstall": "patch-package",
+    "check-env": "bash ../scripts/check-env.sh",
+    "prebuild:android": "npm run -s check-env",
     "build:android": "cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug",
     "bs:upload": "bash ../scripts/bs-upload.sh android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
-    "test:e2e:cloud": "detox test -c android.cloud.debug",
+    "test:detox:cloud": "detox test -c android.cloud.debug",
     "test:percy:cloud": "percy app:exec -- detox test -c android.cloud.debug",
     "test:percy:local": "percy app:exec -- detox test -c android.emu.debug",
-    "test:percy:attached": "percy app:exec -- detox test -c android.att.debug"
+    "test:percy:attached": "percy app:exec -- detox test -c android.att.debug",
+    "test:e2e:cloud": "npm run build:android && UPLOAD=\"$(npm run -s bs:upload)\" && eval \"$UPLOAD\" && npm run test:percy:cloud"
   },
   "dependencies": {
     "react": "18.3.1",
@@ -27,6 +31,7 @@
     "@types/react": "^18.2.6",
     "detox": "npm:@browserstack/detox@20.51.3-cloud.1",
     "jest": "^29.7.0",
+    "patch-package": "^8.0.1",
     "percy-detox": "file:..",
     "typescript": "5.0.4"
   },

@@ -8,6 +8,40 @@ const percyScreenshot = require('percy-detox');
 await percyScreenshot('Home screen', { ignoreRegionTestIDs: ['live-clock'] });
 ```
 
+## Prerequisites
+
+These are strict requirements. The build fails without them, even for BrowserStack cloud runs.
+
+- **Java 17.** `JAVA_HOME` must point to a JDK 17 install (other versions fail the Gradle build). On macOS: `export JAVA_HOME=$(/usr/libexec/java_home -v 17)`.
+- **Android SDK.** `ANDROID_SDK_ROOT` must be exported, e.g. `export ANDROID_SDK_ROOT=~/Library/Android/sdk`. Detox refuses to start without it.
+- **Node.js 18+.**
+- **BrowserStack credentials** (`BROWSERSTACK_USERNAME`, `BROWSERSTACK_ACCESS_KEY`) and an **App Percy token** (`PERCY_TOKEN`, starts with `app_`).
+
+`npm run check-env` (in `example/`) checks Java and the Android SDK. It also runs automatically before every Android build.
+
+## Example app quickstart
+
+`example/` is a working React Native 0.76 app with Home and Settings tabs, set up as described in [Using it in your app](#using-it-in-your-app).
+
+```bash
+export PERCY_TOKEN=app_xxxxxxxx
+export BROWSERSTACK_USERNAME=... BROWSERSTACK_ACCESS_KEY=...
+
+cd example
+npm install              # also applies the Detox fork patch (patches/) via patch-package
+npm run test:e2e:cloud   # check env → build APKs → upload to BrowserStack → Percy run on a real device
+```
+
+`test:e2e:cloud` chains the individual steps, which you can also run separately. Uploads are reusable for about 30 days, so once you have `BROWSERSTACK_APP_URL` / `BROWSERSTACK_APP_CLIENT_URL` exported you can skip straight to the test run:
+
+```bash
+npm run build:android            # runs check-env first
+eval "$(npm run -s bs:upload)"   # exports BROWSERSTACK_APP_URL / BROWSERSTACK_APP_CLIENT_URL
+npm run test:percy:cloud         # BrowserStack real device
+npm run test:percy:attached      # running emulator or USB phone (android.att.debug)
+npm run test:percy:local         # boots the Pixel_7_API_34 AVD (android.emu.debug)
+```
+
 ## How it works
 
 Detox on BrowserStack runs your Jest specs **on your machine / CI runner** and drives a real cloud device over `wss://detox.browserstack.com`. That means the Percy CLI can run locally right next to the tests:
@@ -123,6 +157,8 @@ npx patch-package detox
 # then add "postinstall": "patch-package" to package.json scripts
 ```
 
+The example app already does this. You can copy `example/patches/detox+20.51.3-cloud.1.patch` into your own `patches/` folder.
+
 **`e2e/jest.config.js`**: disable Babel for e2e specs. They're plain Node, and the React Native Babel preset breaks `require('percy-detox')` (`Cannot find module '@babel/runtime/...'`):
 
 ```js
@@ -161,8 +197,9 @@ Snapshot names must be unique within a build. See [Options](#options) for region
 # One App Percy project per app. App tokens start with app_
 export PERCY_TOKEN=app_xxxxxxxx
 export BROWSERSTACK_USERNAME=... BROWSERSTACK_ACCESS_KEY=...
-# Required even for cloud runs. Detox refuses to start without it
+# Required even for cloud runs (see Prerequisites)
 export ANDROID_SDK_ROOT=~/Library/Android/sdk
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 
 cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug && cd ..
 eval "$(bash path/to/percy-detox/scripts/bs-upload.sh \
@@ -177,20 +214,6 @@ Uploads are reusable until they expire (about 30 days). Rebuild and re-upload on
 Without `percy app:exec` (or without `PERCY_TOKEN`), `percyScreenshot` does nothing, so the same specs run normally.
 
 To run on a local emulator or USB phone instead, use the `attached` device: `npx percy app:exec -- detox test -c android.att.debug`.
-
-## Example app
-
-`example/` is a working React Native 0.76 app with Home and Settings tabs, set up as described above. The `node_modules` patch isn't saved with `patch-package` yet, so reapply it after every `npm install`.
-
-```bash
-cd example
-npm install                      # then reapply the BridgeIdlingResource.kt patch
-npm run build:android
-eval "$(npm run -s bs:upload)"
-npm run test:percy:cloud         # BrowserStack real device
-npm run test:percy:attached      # running emulator or USB phone (android.att.debug)
-npm run test:percy:local         # boots the Pixel_7_API_34 AVD (android.emu.debug)
-```
 
 ## Options
 
@@ -213,7 +236,8 @@ npm run test:percy:local         # boots the Pixel_7_API_34 AVD (android.emu.deb
 |---|---|
 | `launchApp()` hangs, then `Socket idle from a long time` / "Detox can't seem to connect to the test app" | Add `127.0.0.1` to `network_security_config.xml` (step 2) |
 | `$ANDROID_SDK_ROOT is not defined` | Export `ANDROID_SDK_ROOT`, even for cloud runs |
-| `'when' expression must be exhaustive` in `BridgeIdlingResource.kt` | Apply the fork patch (step 2) |
+| Gradle fails early with JDK / `Unsupported class file major version` errors | Point `JAVA_HOME` at JDK 17. Run `npm run check-env` to confirm |
+| `'when' expression must be exhaustive` in `BridgeIdlingResource.kt` | Apply the fork patch (step 2). In `example/`, re-run `npm install` (or `npx patch-package`) |
 | `Could not resolve project :detox … cannot choose between … coreNativeDebugApiElements / fullDebugApiElements` | Add `missingDimensionStrategy "detox", "full"` |
 | `Cannot find module '@babel/runtime/helpers/…'` from `percy-detox` | Set `transform: {}` in `e2e/jest.config.js` |
 | Percy shows "Unknown device" | Set `devices.<name>.device.name` / `osVersion` in the Detox config, or pass `deviceName` / `osVersion` |

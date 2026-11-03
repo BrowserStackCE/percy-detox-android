@@ -1,0 +1,12 @@
+diff --git a/node_modules/detox/android/detox/src/full/java/com/wix/detox/reactnative/idlingresources/bridge/BridgeIdlingResource.kt b/node_modules/detox/android/detox/src/full/java/com/wix/detox/reactnative/idlingresources/bridge/BridgeIdlingResource.kt
+index 81abc2e..da47cd5 100644
+--- a/node_modules/detox/android/detox/src/full/java/com/wix/detox/reactnative/idlingresources/bridge/BridgeIdlingResource.kt
++++ b/node_modules/detox/android/detox/src/full/java/com/wix/detox/reactnative/idlingresources/bridge/BridgeIdlingResource.kt
+@@ -99,6 +99,7 @@ private class BridgeIdleListenerApi(private val reactContext: ReactContext) {
+                         "equals" -> proxy === args?.firstOrNull()
+                         "hashCode" -> System.identityHashCode(proxy)
+                         "toString" -> "BridgeIdleListenerProxy"
++                        else -> null
+                     }
+                 }
+             )
